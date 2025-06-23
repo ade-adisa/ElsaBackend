@@ -1,0 +1,6 @@
+@ElsaBackendClean_HostAddress = http://localhost:5039
+
+GET {{ElsaBackendClean_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
