@@ -1,9 +1,10 @@
 using Elsa;
 using Elsa.Extensions;
 using Elsa.EntityFrameworkCore.Extensions;
-// using Elsa.EntityFrameworkCore.DbContexts;
 using ElsaWeb.Workflows;
 using Microsoft.EntityFrameworkCore;
+using Elsa.EntityFrameworkCore.Modules.Management;
+using Elsa.EntityFrameworkCore.Modules.Runtime;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,7 +12,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddElsa(elsa =>
 {
-    // elsa.UseEntityFrameworkCorePersistence(ef => ef.UseSqlite("Data Source=elsa.db"));
+    elsa.UseWorkflowManagement(runtime => runtime.UseEntityFrameworkCore(ef => ef.UseSqlite("Data Source=elsa.db")));
+    elsa.UseWorkflowRuntime(runtime => runtime.UseEntityFrameworkCore(ef => ef.UseSqlite("Data Source=elsa.db")));
     elsa.AddWorkflow<HttpHelloWorld>();
     elsa.AddWorkflow<HttpSaveWorkflow>();
     elsa.AddWorkflow<HttpExecuteWorkflow>();
@@ -23,6 +25,9 @@ builder.Services.AddElsa(elsa =>
         options.BasePath = "/workflows";
     });
 });
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlite("Data Source=elsa.db")); // Reuse the same DB
 
 //Avoid CORS Errors in Frontend
 builder.Services.AddCors(options =>
@@ -36,6 +41,13 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+app.UseRouting();
+app.Use(async (context, next) =>
+{
+    context.Request.EnableBuffering(); // Allow multiple reads
+    await next();
+});
+
 // Auto-migrate database
 // using (var scope = app.Services.CreateScope())
 // {
@@ -48,3 +60,10 @@ app.UseAuthorization();
 app.MapControllers();
 app.UseWorkflows();
 app.Run();
+
+public class AppDbContext : DbContext
+{
+    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+
+    public DbSet<SavedWorkflow> SavedWorkflows => Set<SavedWorkflow>();
+}

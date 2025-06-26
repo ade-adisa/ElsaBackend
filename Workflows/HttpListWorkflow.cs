@@ -1,17 +1,17 @@
 using Elsa.Http;
 using Elsa.Workflows;
 using Elsa.Workflows.Activities;
-using System.Dynamic;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using System.Net;
+using System.Text.Json;
 
 namespace ElsaWeb.Workflows;
-//List Workflows (GET /api/workflows) and Get by ID
+
 public class HttpListWorkflow : WorkflowBase
 {
     protected override void Build(IWorkflowBuilder builder)
     {
-        var idVar = builder.WithVariable<string>();
-
         builder.Root = new Sequence
         {
             Activities =
@@ -24,7 +24,31 @@ public class HttpListWorkflow : WorkflowBase
                 },
                 new WriteHttpResponse
                 {
-                    Content = new("Listing all workflows (simulated).")
+                    StatusCode = new(HttpStatusCode.OK),
+                    Content = new(async context =>
+                    {
+                        var db = context.GetRequiredService<AppDbContext>();
+
+                        var saved = await db.SavedWorkflows
+                            .OrderByDescending(w => w.SavedAt)
+                            .ToListAsync();
+
+                        var transformed = saved.Select(w => new
+                        {
+                            id = w.WorkflowId,
+                            name = w.Name,
+                            definition = JsonSerializer.Deserialize<object>(w.DefinitionJson),
+                            savedAt = w.SavedAt,
+                        });
+
+                        var json = JsonSerializer.Serialize(transformed, new JsonSerializerOptions
+                        {
+                            WriteIndented = true
+                        });
+
+                        return json;
+                    }),
+                    ContentType = new("application/json")
                 }
             }
         };

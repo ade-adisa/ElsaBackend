@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ElsaBackendClean")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ef2f0b11ff56987a474513e79f90d3aa52c1f3cd")]
 [assembly: System.Reflection.AssemblyProductAttribute("ElsaBackendClean")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ElsaBackendClean")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
